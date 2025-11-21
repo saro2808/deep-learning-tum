@@ -53,6 +53,7 @@ def submit_exercise(
         for folder in relevant_folders:
             print('Adding folder {}'.format(folder))
             if len(os.listdir(folder)) == 0 and folder == RELEVANT_FOLDERS[0]:
+                print("324324324233")
                 sleep(2)
                 if len(os.listdir(folder)) == 0:
                     msg = f"ERROR: The folder '{folder}' is EMPTY! Make sure that the relevant cells ran properly \

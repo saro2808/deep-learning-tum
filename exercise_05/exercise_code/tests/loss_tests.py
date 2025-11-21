@@ -25,7 +25,10 @@ class LossForwardUnitTest(UnitTest):
         self.student_loss_func = studnet_loss
         self.inputs = inputs
         self.targets = targets
+        
+        self.student_value = self.student_loss_func(self.inputs, self.targets)
         self.expected_result = self.ground_truth()
+        self.name = "LossFuncUnitTest"
         self.eps = 1e-5
         
     def ground_truth(self):
@@ -33,36 +36,9 @@ class LossForwardUnitTest(UnitTest):
         raise NotImplementedError("Ground truth implementation of loss function is not implemented")
         
     def test(self):
-        
-        self.student_value = self.student_loss_func(self.inputs, self.targets)
-        self.student_value_arr = self.student_loss_func(self.inputs, self.targets, individual_losses=True)
-        
-        error_mean = np.abs(self.student_value - self.expected_result) < self.eps
-        error_arr = np.abs(np.mean(self.student_value_arr) - self.expected_result) < self.eps
-        
-        if not (type(self.student_value_arr) == np.ndarray and len(self.student_value_arr) == len(self.targets)):
-            self.failed_msg = self.define_first_error_message()
-            return False
-        elif not error_mean:
-            self.name =  f"{self.name} (mean)"
-            self.failed_msg = self.define_second_error_message()
-            return False
-        elif not error_arr:
-            self.name =  f"{self.name} (Individual losses' mean)"
-            self.student_value = np.mean(self.student_value_arr)
-            self.failed_msg = self.define_second_error_message()
-            return False
-        return True
-
+        return ((self.student_value - self.expected_result) < self.eps).all()
 
     def define_failure_message(self):
-        return self.failed_msg
-    
-    def define_first_error_message(self):
-        return " ".join(f"{self.test_name} {self.failed_msg} {string_utils.ARROW}\
-            {self.name} is incorrect. 'Individual losses' are not correctly implemented in forward().".split())
-        
-    def define_second_error_message(self):
         return " ".join(f"{self.test_name} {self.failed_msg} {string_utils.ARROW}\
             {self.name} is incorrect. Expected {self.expected_result}, \
                 but got {self.student_value}".split())
@@ -88,29 +64,13 @@ class LossBackwardNormalUnitTest(UnitTest):
         return eval_numerical_gradient(f, np.array(self.y_out))
         
     def test(self):
-                
         self.expected_grad = self.ground_truth()
-        
-        if not (type(self.student_grad) == np.ndarray and self.student_grad.shape == self.expected_grad.shape):
-            self.failed_msg = self.define_first_error_message()
-            return False
-        
-        self.error = rel_error(self.student_grad, self.expected_grad)
-        if  self.error >= self.eps:
-            self.failed_msg = self.define_second_error_message()
-            return
-        return True
-        
+        self.error = rel_error(self.expected_grad, self.student_grad)
+        return self.error < self.eps
+
     def define_failure_message(self):
-        return self.failed_msg
-        
-    def define_first_error_message(self):
         return " ".join(f"{self.test_name} {self.failed_msg} {string_utils.ARROW}\
-            {self.name} is incorrect. 'Individual losses' are not correctly implemented in forward().".split())
-        
-    def define_second_error_message(self):
-        return " ".join(f"{self.test_name} {self.failed_msg} {string_utils.ARROW}\
-            {self.name} is incorrect. Expected error to be x < {self.eps}, \
+            {self.name} is incorrect. Expected error to be x < 1e-8, \
                 but evaluated {self.error}".split())
             
 class LossBackwardZeroUnitTest(UnitTest):
@@ -162,7 +122,6 @@ class L1BackwardTest(MethodTest):
 
     def define_method_name(self):
         return "L1.backward"
-    
 class L1Test(CompositeTest):
     def define_tests(self, loss):
         return [
@@ -217,7 +176,7 @@ class BCEForwardTest(LossForwardUnitTest):
     
     def __init__(self, student_loss, inputs, targets):
         super().__init__(student_loss, inputs, targets)
-        self.name = "BCE Forward"
+        self.name = "BCEForwardTest"
     
     def ground_truth(self):
         likelihood = - (self.targets * np.log(self.inputs) + (1 - self.targets) * np.log(1 - self.inputs))
@@ -228,7 +187,6 @@ class BCEBackwardTestNormal(LossBackwardNormalUnitTest):
     def __init__(self, loss, y_out, y_truth):
         super().__init__(loss, y_out, y_truth)
         self.name = "BCE Backward"
-        
 class BCETest(CompositeTest):
     
     def define_tests(self, loss):

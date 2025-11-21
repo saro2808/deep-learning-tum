@@ -1,8 +1,8 @@
 """Network base class"""
 from abc import ABC, abstractmethod
+import numpy as np
 import os
 import pickle
-import numpy as np
 
 """In Pytorch you would usually define the `forward` function which performs all the interesting computations"""
 
@@ -31,7 +31,11 @@ class Network(ABC):
 
     def __call__(self, X):
         """takes data points X in train mode, and data X and output y in eval mode"""
-        return self.forward(X)
+        y = self.forward(X)
+        if self.return_grad:
+            return y, self.backward(y)
+        else:
+            return y, None
 
     def train(self):
         """sets the network in training mode, i.e. returns gradient when called"""
@@ -62,7 +66,8 @@ class DummyNetwork(Network):
         :param x: The input to the network
         :return: results of computation of sigmoid on the input
         """
-        pass
+        x = 1 / (1 + np.exp(-x))
+
         return x
 
     def __repr__(self):
@@ -73,11 +78,5 @@ class DummyNetwork(Network):
         model = {self.model_name: self}
         if not os.path.exists(directory):
             os.makedirs(directory)
-        pickle.dump(
-            model,
-            open(
-                directory +
-                '/' +
-                self.model_name +
-                '.p',
-                'wb'))
+        pickle.dump(model, open(directory + '/' +
+                                self.model_name + '.p', 'wb'))

@@ -57,6 +57,10 @@ class string_utils:
     @staticmethod
     def print_test_finished(test_name=""):
         print(f"\n{string_utils.HASHTAGS} Testing {bcolors.colorize('cyan', test_name)} Finished {string_utils.HASHTAGS}")
+    
+    @staticmethod
+    def failure_message(test_name, msg):
+        return " ".join(f"{test_name} {bcolors.failure_msg()} {string_utils.ARROW} {msg}".split())
 
 
 class UnitTest(ABC):

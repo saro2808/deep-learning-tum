@@ -10,7 +10,7 @@ class Dataset(ABC):
     Abstract Dataset Base Class
     All subclasses must define __getitem__() and __len__()
     """
-    def __init__(self, root, download_url=None, force_download=False, verbose=False):
+    def __init__(self, root, download_url=None, force_download=False):
         self.root_path = root
         # The actual archive name should be all the text of the url after the
         # last '/'.
@@ -22,7 +22,6 @@ class Dataset(ABC):
                 data_dir=root,
                 dataset_zip_name=dataset_zip_name,
                 force_download=force_download,
-                verbose=verbose,
             )
 
     @abstractmethod
